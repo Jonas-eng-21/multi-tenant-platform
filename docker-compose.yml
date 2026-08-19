@@ -1,0 +1,30 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: multi-tenant-postgres
+    environment:
+      POSTGRES_DB: multitenant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./multi-tenant-api
+      dockerfile: Dockerfile
+    container_name: multi-tenant-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/multitenant
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
