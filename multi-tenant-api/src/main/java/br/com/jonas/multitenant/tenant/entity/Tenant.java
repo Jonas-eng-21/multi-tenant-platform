@@ -1,10 +1,8 @@
 package br.com.jonas.multitenant.tenant.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -12,10 +10,14 @@ import java.util.UUID;
 public class Tenant {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, length = 100)
     private String nome;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     protected Tenant() {
     }
@@ -25,11 +27,20 @@ public class Tenant {
         this.nome = nome;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public UUID getId() {
         return id;
     }
 
     public String getNome() {
         return nome;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }

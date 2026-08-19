@@ -3,6 +3,7 @@ package br.com.jonas.multitenant.user.entity;
 import br.com.jonas.multitenant.tenant.entity.Tenant;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -29,6 +31,9 @@ public class User {
 
     @Column(nullable = false, length = 255)
     private String password;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     protected User() {
     }
@@ -45,6 +50,11 @@ public class User {
         this.password = password;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public UUID getId() {
         return id;
     }
@@ -59,5 +69,9 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
