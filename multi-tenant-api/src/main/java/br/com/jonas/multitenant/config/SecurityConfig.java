@@ -1,8 +1,12 @@
 package br.com.jonas.multitenant.config;
 
+import br.com.jonas.multitenant.security.CustomAccessDeniedHandler;
+import br.com.jonas.multitenant.security.CustomAuthenticationEntryPoint;
 import br.com.jonas.multitenant.security.TenantContextFilter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,7 +40,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
@@ -47,7 +51,15 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint(resolver))
+                        .accessDeniedHandler(new CustomAccessDeniedHandler(resolver))
+                        .jwt(Customizer.withDefaults())
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint(resolver))
+                        .accessDeniedHandler(new CustomAccessDeniedHandler(resolver))
+                )
                 .addFilterAfter(new TenantContextFilter(), BearerTokenAuthenticationFilter.class)
                 .build();
     }
