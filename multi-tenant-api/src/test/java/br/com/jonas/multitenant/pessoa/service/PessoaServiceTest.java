@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import br.com.jonas.multitenant.beneficiario.repository.BeneficiarioRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
@@ -27,6 +28,9 @@ class PessoaServiceTest {
 
     @Mock
     private PessoaRepository pessoaRepository;
+
+    @Mock
+    private BeneficiarioRepository beneficiarioRepository;
 
     @InjectMocks
     private PessoaService pessoaService;
@@ -129,6 +133,7 @@ class PessoaServiceTest {
     void delete_exists_deletesPessoa() {
         Pessoa pessoa = new Pessoa(pessoaId, "João", "12345678901", LocalDate.of(1990, 1, 1), null);
         when(pessoaRepository.findById(pessoaId)).thenReturn(Optional.of(pessoa));
+        when(beneficiarioRepository.existsByPessoaId(pessoaId)).thenReturn(false);
 
         pessoaService.delete(pessoaId);
 
@@ -140,6 +145,17 @@ class PessoaServiceTest {
     void delete_hasBeneficiarios_throwsConflictException() {
         Pessoa pessoa = new Pessoa(pessoaId, "João", "12345678901", LocalDate.of(1990, 1, 1), null);
         when(pessoaRepository.findById(pessoaId)).thenReturn(Optional.of(pessoa));
+        when(beneficiarioRepository.existsByPessoaId(pessoaId)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> pessoaService.delete(pessoaId));
+        verify(pessoaRepository, never()).delete(pessoa);
+    }
+    
+    @Test
+    void delete_hasBeneficiariosAtDbLevel_throwsConflictException() {
+        Pessoa pessoa = new Pessoa(pessoaId, "João", "12345678901", LocalDate.of(1990, 1, 1), null);
+        when(pessoaRepository.findById(pessoaId)).thenReturn(Optional.of(pessoa));
+        when(beneficiarioRepository.existsByPessoaId(pessoaId)).thenReturn(false);
         doThrow(DataIntegrityViolationException.class).when(pessoaRepository).flush();
 
         assertThrows(ConflictException.class, () -> pessoaService.delete(pessoaId));
