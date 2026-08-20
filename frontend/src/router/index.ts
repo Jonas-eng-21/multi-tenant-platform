@@ -21,6 +21,42 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/beneficiarios',
+      name: 'beneficiarios',
+      component: () => import('../views/BeneficiariosView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/beneficiarios/novo',
+      name: 'novo-beneficiario',
+      component: () => import('../views/BeneficiarioFormView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/beneficiarios/:id/editar',
+      name: 'editar-beneficiario',
+      component: () => import('../views/BeneficiarioFormView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/pessoas',
+      name: 'pessoas',
+      component: () => import('../views/PessoasView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/pessoas/nova',
+      name: 'pessoas-nova',
+      component: () => import('../views/PessoaFormView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/pessoas/:id/editar',
+      name: 'pessoas-editar',
+      component: () => import('../views/PessoaFormView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
