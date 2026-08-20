@@ -1,40 +1,148 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import Card from '../components/organisms/Card.vue'
 import Table from '../components/organisms/Table.vue'
 import Badge from '../components/atoms/Badge.vue'
 import Avatar from '../components/atoms/Avatar.vue'
 import Icon from '../components/atoms/Icon.vue'
+import { pessoaService } from '../services/pessoa.service'
+import { beneficiarioService } from '../services/beneficiario.service'
+import { useToast } from '../composables/useToast'
+import type { BeneficiarioResponse } from '../types/api'
+import StateFeedback from '../components/molecules/StateFeedback.vue'
 
-const kpis = [
-  { label: 'Pessoas', value: '1.245', icon: 'users' as const, color: 'bg-blue-50 text-blue-600' },
-  { label: 'Beneficiários', value: '856', icon: 'heart' as const, color: 'bg-purple-50 text-purple-600' },
-  { label: 'Beneficiários ativos', value: '790', icon: 'check' as const, color: 'bg-emerald-50 text-success' },
-  { label: 'Beneficiários inativos', value: '66', icon: 'close' as const, color: 'bg-red-50 text-error' },
-]
+const router = useRouter()
+const { error: toastError } = useToast()
 
-const distribution = {
-  total: 856,
-  titulares: { count: 599, pct: 70 },
-  dependentes: { count: 257, pct: 30 },
-}
+const loading = ref(true)
+const errorMessage = ref<string | null>(null)
 
-const recentBeneficiaries = ref([
-  { name: 'Carlos Silva', matricula: 'MAT-10293', type: 'Titular', status: 'active' as const, date: '24 Out 2023' },
-  { name: 'Ana Oliveira', matricula: 'MAT-10294', type: 'Dependente', status: 'active' as const, date: '24 Out 2023' },
-  { name: 'Roberto Mendes', matricula: 'MAT-10295', type: 'Titular', status: 'pending' as const, date: '23 Out 2023' },
-  { name: 'Juliana Costa', matricula: 'MAT-10296', type: 'Titular', status: 'inactive' as const, date: '21 Out 2023' },
+const kpisData = ref({
+  pessoas: 0,
+  beneficiarios: 0,
+  ativos: 0,
+  inativos: 0
+})
+
+const distData = ref({
+  total: 0,
+  titulares: 0,
+  dependentes: 0
+})
+
+const recentBeneficiaries = ref<BeneficiarioResponse[]>([])
+
+const kpis = computed(() => [
+  { label: 'Pessoas', value: kpisData.value.pessoas.toString(), icon: 'users' as const, color: 'bg-blue-50 text-blue-600' },
+  { label: 'Beneficiários', value: kpisData.value.beneficiarios.toString(), icon: 'heart' as const, color: 'bg-purple-50 text-purple-600' },
+  { label: 'Beneficiários ativos', value: kpisData.value.ativos.toString(), icon: 'check' as const, color: 'bg-emerald-50 text-success' },
+  { label: 'Beneficiários inativos', value: kpisData.value.inativos.toString(), icon: 'close' as const, color: 'bg-red-50 text-error' },
 ])
 
+const distribution = computed(() => {
+  const total = distData.value.total
+  if (total === 0) {
+    return {
+      total: 0,
+      titulares: { count: 0, pct: 0 },
+      dependentes: { count: 0, pct: 0 },
+    }
+  }
+  
+  const pctTitulares = Math.round((distData.value.titulares / total) * 100)
+  const pctDependentes = Math.round((distData.value.dependentes / total) * 100)
+  
+  return {
+    total,
+    titulares: { count: distData.value.titulares, pct: pctTitulares },
+    dependentes: { count: distData.value.dependentes, pct: pctDependentes },
+  }
+})
+
 const statusLabel: Record<string, string> = {
-  active: 'Ativo',
-  pending: 'Pendente',
-  inactive: 'Inativo',
+  ATIVO: 'Ativo',
+  INATIVO: 'Inativo',
+  SUSPENSO: 'Suspenso',
+  CANCELADO: 'Cancelado'
+}
+
+const statusVariantMap: Record<string, 'active' | 'inactive' | 'pending' | 'error'> = {
+  ATIVO: 'active',
+  INATIVO: 'inactive',
+  SUSPENSO: 'pending',
+  CANCELADO: 'error'
+}
+
+const formatDate = (isoString: string) => {
+  if (!isoString) return ''
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(isoString))
 }
 
 const circumference = computed(() => 2 * Math.PI * 60)
-const titularOffset = computed(() => circumference.value * (1 - distribution.titulares.pct / 100))
+const titularOffset = computed(() => {
+  if (distribution.value.total === 0) return circumference.value
+  return circumference.value * (1 - distribution.value.titulares.pct / 100)
+})
+
+const carregarDados = async () => {
+  loading.value = true
+  errorMessage.value = null
+  try {
+    const [
+      resPessoas,
+      resBenTotal,
+      resBenAtivos,
+      resBenInativos,
+      resBenTitulares,
+      resBenDependentes,
+      resBenRecentes
+    ] = await Promise.all([
+      pessoaService.listar({ size: 1 }),
+      beneficiarioService.listar({ size: 1 }),
+      beneficiarioService.listar({ size: 1, status: 'ATIVO' }),
+      beneficiarioService.listar({ size: 1, status: 'INATIVO' }),
+      beneficiarioService.listar({ size: 1, tipo: 'TITULAR' }),
+      beneficiarioService.listar({ size: 1, tipo: 'DEPENDENTE' }),
+      beneficiarioService.listar({ size: 5, sort: 'createdAt,desc' })
+    ])
+    
+    kpisData.value = {
+      pessoas: resPessoas.totalElements,
+      beneficiarios: resBenTotal.totalElements,
+      ativos: resBenAtivos.totalElements,
+      inativos: resBenInativos.totalElements
+    }
+    
+    distData.value = {
+      total: resBenTotal.totalElements,
+      titulares: resBenTitulares.totalElements,
+      dependentes: resBenDependentes.totalElements
+    }
+    
+    recentBeneficiaries.value = resBenRecentes.content
+    
+  } catch (err) {
+    toastError('Erro ao carregar dados do dashboard.')
+    errorMessage.value = 'Não foi possível carregar o dashboard. Tente novamente mais tarde.'
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleRetry = () => {
+  carregarDados()
+}
+
+onMounted(() => {
+  carregarDados()
+})
+
+const navigateToAll = () => {
+  router.push('/beneficiarios')
+}
 </script>
 
 <template>
@@ -42,22 +150,37 @@ const titularOffset = computed(() => circumference.value * (1 - distribution.tit
     <div class="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold text-text-primary">Visão geral</h1>
-        <p class="text-text-secondary text-sm mt-1">Resumo do ambiente · <span class="font-medium text-primary">Tenant Dev A</span></p>
+        <p class="text-text-secondary text-sm mt-1">Resumo do ambiente</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card v-for="kpi in kpis" :key="kpi.label" class="!p-0">
-          <div class="flex items-center gap-4">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="kpi.color">
-              <Icon :name="kpi.icon" class="w-5 h-5" />
+      <StateFeedback 
+        v-if="loading" 
+        type="loading" 
+        message="Carregando painel..." 
+      />
+      
+      <StateFeedback 
+        v-else-if="errorMessage" 
+        type="error" 
+        title="Erro no painel" 
+        :message="errorMessage" 
+        @retry="handleRetry" 
+      />
+
+      <template v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Card v-for="kpi in kpis" :key="kpi.label" class="!p-0">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="kpi.color">
+                <Icon :name="kpi.icon" class="w-5 h-5" />
+              </div>
+              <div>
+                <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">{{ kpi.label }}</p>
+                <p class="text-2xl font-bold text-text-primary">{{ kpi.value }}</p>
+              </div>
             </div>
-            <div>
-              <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">{{ kpi.label }}</p>
-              <p class="text-2xl font-bold text-text-primary">{{ kpi.value }}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <Card class="lg:col-span-1">
@@ -114,58 +237,69 @@ const titularOffset = computed(() => circumference.value * (1 - distribution.tit
           <template #header>
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-text-primary">Beneficiários recentes</h3>
-              <button class="text-sm text-secondary hover:text-secondary-dark font-medium transition-colors">Ver todos</button>
+              <button @click="navigateToAll" class="text-sm text-secondary hover:text-secondary-dark font-medium transition-colors">Ver todos</button>
             </div>
           </template>
 
-          <div class="hidden sm:block -mx-6 -mb-6">
-            <Table>
-              <template #header>
-                <th>Pessoa</th>
-                <th>Matrícula</th>
-                <th>Tipo</th>
-                <th>Status</th>
-                <th>Data</th>
-              </template>
-              <tr v-for="b in recentBeneficiaries" :key="b.matricula">
-                <td>
-                  <div class="flex items-center gap-3">
-                    <Avatar size="sm" :name="b.name" />
-                    <span class="font-medium">{{ b.name }}</span>
-                  </div>
-                </td>
-                <td class="text-text-secondary font-mono text-xs">{{ b.matricula }}</td>
-                <td>{{ b.type }}</td>
-                <td><Badge :variant="b.status">{{ statusLabel[b.status] }}</Badge></td>
-                <td class="text-text-secondary">{{ b.date }}</td>
-              </tr>
-            </Table>
+          <div v-if="recentBeneficiaries.length === 0" class="py-4">
+            <StateFeedback 
+              type="empty" 
+              icon="heart"
+              title="Sem beneficiários"
+              message="Nenhum beneficiário recente." 
+            />
           </div>
+          <template v-else>
+            <div class="hidden sm:block -mx-6 -mb-6">
+              <Table>
+                <template #header>
+                  <th>Pessoa</th>
+                  <th>Matrícula</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                </template>
+                <tr v-for="b in recentBeneficiaries" :key="b.matricula">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <Avatar size="sm" :name="b.pessoa.nome" />
+                      <span class="font-medium">{{ b.pessoa.nome }}</span>
+                    </div>
+                  </td>
+                  <td class="text-text-secondary font-mono text-xs">{{ b.matricula }}</td>
+                  <td class="capitalize">{{ b.tipo.toLowerCase() }}</td>
+                  <td><Badge :variant="statusVariantMap[b.status]">{{ statusLabel[b.status] }}</Badge></td>
+                  <td class="text-text-secondary">{{ formatDate(b.createdAt) }}</td>
+                </tr>
+              </Table>
+            </div>
 
-          <div class="sm:hidden space-y-3 -mx-2">
-            <div
-              v-for="b in recentBeneficiaries"
-              :key="b.matricula"
-              class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Avatar size="sm" :name="b.name" />
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-2">
-                  <p class="text-sm font-medium text-text-primary truncate">{{ b.name }}</p>
-                  <Badge :variant="b.status" class="shrink-0">{{ statusLabel[b.status] }}</Badge>
-                </div>
-                <div class="flex items-center gap-2 mt-0.5">
-                  <span class="text-xs text-text-secondary font-mono">{{ b.matricula }}</span>
-                  <span class="text-xs text-text-secondary">·</span>
-                  <span class="text-xs text-text-secondary">{{ b.type }}</span>
-                  <span class="text-xs text-text-secondary">·</span>
-                  <span class="text-xs text-text-secondary">{{ b.date }}</span>
+            <div class="sm:hidden space-y-3 -mx-2">
+              <div
+                v-for="b in recentBeneficiaries"
+                :key="b.matricula"
+                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Avatar size="sm" :name="b.pessoa.nome" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-sm font-medium text-text-primary truncate">{{ b.pessoa.nome }}</p>
+                    <Badge :variant="statusVariantMap[b.status]" class="shrink-0">{{ statusLabel[b.status] }}</Badge>
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs text-text-secondary font-mono">{{ b.matricula }}</span>
+                    <span class="text-xs text-text-secondary">·</span>
+                    <span class="text-xs text-text-secondary capitalize">{{ b.tipo.toLowerCase() }}</span>
+                    <span class="text-xs text-text-secondary">·</span>
+                    <span class="text-xs text-text-secondary">{{ formatDate(b.createdAt) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
         </Card>
       </div>
+      </template>
     </div>
   </AdminLayout>
 </template>

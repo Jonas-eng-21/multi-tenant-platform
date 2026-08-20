@@ -22,13 +22,6 @@ const navItems = [
   { label: 'Beneficiários', icon: 'heart' as const, to: '/beneficiarios' },
 ]
 
-const bottomNavItems = [
-  { label: 'Dashboard', icon: 'dashboard' as const, to: '/dashboard' },
-  { label: 'Pessoas', icon: 'users' as const, to: '/pessoas' },
-  { label: 'Beneficiários', icon: 'heart' as const, to: '/beneficiarios' },
-  { label: 'Notificações', icon: 'bell' as const, to: '#' },
-]
-
 const toggleDrawer = () => {
   drawerOpen.value = !drawerOpen.value
 }
@@ -48,9 +41,9 @@ onUnmounted(() => document.removeEventListener('keydown', handleEscape))
 </script>
 
 <template>
-  <div class="min-h-screen bg-bg-base flex overflow-x-hidden">
-    <aside class="hidden md:flex md:flex-col md:w-[280px] md:shrink-0 bg-primary min-h-screen sticky top-0">
-      <div class="px-6 py-6 border-b border-white/10">
+  <div class="h-screen bg-bg-base flex overflow-hidden">
+    <aside class="hidden md:flex md:flex-col md:w-[280px] md:shrink-0 bg-primary h-screen sticky top-0">
+      <div class="px-6 py-6 border-b border-white/10 shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
             <Icon name="heart" class="w-5 h-5 text-primary" />
@@ -62,7 +55,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleEscape))
         </div>
       </div>
 
-      <nav class="flex-1 px-4 py-4 space-y-1">
+      <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         <NavItem
           v-for="item in navItems"
           :key="item.to"
@@ -72,7 +65,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleEscape))
         />
       </nav>
 
-      <div class="px-4 py-4 border-t border-white/10">
+      <div class="px-4 py-4 border-t border-white/10 shrink-0">
         <div class="flex items-center gap-3 px-3 py-2">
           <Avatar size="sm" :name="user?.username || 'Usuário'" />
           <div class="flex-1 min-w-0">
@@ -141,7 +134,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleEscape))
       </aside>
     </Teleport>
 
-    <div class="flex-1 flex flex-col min-w-0 w-full">
+    <div class="flex-1 flex flex-col min-w-0 w-full h-screen">
       <header class="md:hidden sticky top-0 z-30 bg-surface border-b border-border-base px-4 py-3 flex items-center justify-between shrink-0">
         <button @click="toggleDrawer" class="p-1.5 text-text-secondary hover:text-text-primary rounded-lg" aria-label="Abrir menu">
           <Icon name="menu" class="w-6 h-6" />
@@ -150,12 +143,12 @@ onUnmounted(() => document.removeEventListener('keydown', handleEscape))
         <Avatar size="sm" :name="user?.username || 'Usuário'" />
       </header>
 
-      <main class="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-8 overflow-x-hidden">
+      <main class="flex-1 flex flex-col min-h-0 p-4 md:p-6 lg:p-8 pb-24 md:pb-8 overflow-y-auto overflow-x-hidden">
         <slot></slot>
       </main>
       <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface border-t border-border-base flex items-center justify-around px-2 py-1.5 safe-area-bottom">
         <router-link
-          v-for="item in bottomNavItems"
+          v-for="item in navItems"
           :key="item.to"
           :to="item.to"
           class="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors min-w-[56px]"
