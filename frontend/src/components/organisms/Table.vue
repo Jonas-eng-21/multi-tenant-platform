@@ -6,9 +6,9 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="overflow-x-auto w-full border border-border-base sm:rounded-lg">
+  <div class="overflow-auto w-full border border-border-base sm:rounded-lg relative">
     <table class="w-full text-sm text-left text-text-primary bg-white">
-      <thead class="text-xs text-text-secondary uppercase bg-gray-50 border-b border-border-base">
+      <thead class="text-xs text-text-secondary uppercase bg-gray-50 border-b border-border-base sticky top-0 z-10">
         <tr>
           <slot name="header"></slot>
         </tr>

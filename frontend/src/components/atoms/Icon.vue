@@ -10,7 +10,6 @@ export type IconName =
   | 'dashboard'
   | 'users'
   | 'heart'
-  | 'bell'
   | 'menu'
   | 'log-out'
   | 'arrow-left'
@@ -21,6 +20,8 @@ export type IconName =
   | 'user'
   | 'building'
   | 'shield'
+  | 'edit'
+  | 'trash-2'
 
 const props = defineProps<{
   name: IconName
@@ -36,11 +37,12 @@ const paths: Record<string, string> = {
   dashboard: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 6a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5zm-10-1a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z',
   users: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2m22-4v2a4 4 0 01-3 3.87M9 7a4 4 0 100-8 4 4 0 000 8zm7.5-1a3 3 0 100-6',
   heart: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z',
-  bell: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9m-4.27 13a2 2 0 01-3.46 0',
   menu: 'M4 6h16M4 12h16M4 18h16',
   'log-out': 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9',
   'arrow-left': 'M19 12H5m7-7l-7 7 7 7',
-  headphones: 'M3 18v-6a9 9 0 0118 0v6m-2 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-14 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z'
+  headphones: 'M3 18v-6a9 9 0 0118 0v6m-2 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-14 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z',
+  edit: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
+  'trash-2': 'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6'
 }
 
 const path = computed(() => paths[props.name])
