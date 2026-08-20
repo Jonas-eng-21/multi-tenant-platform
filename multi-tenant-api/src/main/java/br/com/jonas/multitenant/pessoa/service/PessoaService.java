@@ -8,6 +8,8 @@ import br.com.jonas.multitenant.pessoa.dto.PessoaUpdateRequest;
 import br.com.jonas.multitenant.pessoa.entity.Pessoa;
 import br.com.jonas.multitenant.pessoa.repository.PessoaRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import br.com.jonas.multitenant.common.dto.PageResponse;
+import br.com.jonas.multitenant.pessoa.repository.PessoaSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,14 +46,9 @@ public class PessoaService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PessoaResponse> findAll(String nome, Pageable pageable) {
-        Page<Pessoa> page;
-        if (nome != null && !nome.isBlank()) {
-            page = pessoaRepository.findByNomeContainingIgnoreCase(nome, pageable);
-        } else {
-            page = pessoaRepository.findAll(pageable);
-        }
-        return page.map(this::toResponse);
+    public PageResponse<PessoaResponse> findAll(String nome, String cpf, Pageable pageable) {
+        Page<Pessoa> page = pessoaRepository.findAll(PessoaSpecification.filterBy(nome, cpf), pageable);
+        return PageResponse.of(page.map(this::toResponse));
     }
 
     @Transactional(readOnly = true)

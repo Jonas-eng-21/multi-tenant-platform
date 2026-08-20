@@ -13,6 +13,10 @@ import br.com.jonas.multitenant.pessoa.repository.PessoaRepository;
 import br.com.jonas.multitenant.security.TenantContext;
 import br.com.jonas.multitenant.tenant.entity.Tenant;
 import br.com.jonas.multitenant.tenant.repository.TenantRepository;
+import br.com.jonas.multitenant.beneficiario.entity.StatusBeneficiario;
+import br.com.jonas.multitenant.beneficiario.entity.TipoBeneficiario;
+import br.com.jonas.multitenant.beneficiario.repository.BeneficiarioSpecification;
+import br.com.jonas.multitenant.common.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -67,16 +71,14 @@ public class BeneficiarioService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BeneficiarioResponse> findAll(String matricula, Pageable pageable) {
+    public PageResponse<BeneficiarioResponse> findAll(String matricula, StatusBeneficiario status, TipoBeneficiario tipo, Pageable pageable) {
         UUID tenantId = getRequiredTenantId();
 
-        Page<Beneficiario> page;
-        if (matricula != null && !matricula.isBlank()) {
-            page = beneficiarioRepository.findByTenantIdAndMatriculaContainingIgnoreCase(tenantId, matricula, pageable);
-        } else {
-            page = beneficiarioRepository.findByTenantId(tenantId, pageable);
-        }
-        return page.map(this::toResponse);
+        Page<Beneficiario> page = beneficiarioRepository.findAll(
+                BeneficiarioSpecification.filterBy(tenantId, matricula, status, tipo), 
+                pageable
+        );
+        return PageResponse.of(page.map(this::toResponse));
     }
 
     @Transactional(readOnly = true)

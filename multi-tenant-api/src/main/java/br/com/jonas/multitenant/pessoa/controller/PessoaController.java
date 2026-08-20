@@ -5,7 +5,7 @@ import br.com.jonas.multitenant.pessoa.dto.PessoaResponse;
 import br.com.jonas.multitenant.pessoa.dto.PessoaUpdateRequest;
 import br.com.jonas.multitenant.pessoa.service.PessoaService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+import br.com.jonas.multitenant.common.dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +30,12 @@ public class PessoaController {
     }
 
     @GetMapping
-    public Page<PessoaResponse> findAll(
+    public PageResponse<PessoaResponse> findAll(
             @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String cpf,
             Pageable pageable
     ) {
-        return pessoaService.findAll(nome, pageable);
+        return pessoaService.findAll(nome, cpf, pageable);
     }
 
     @GetMapping("/{id}")

@@ -5,7 +5,9 @@ import br.com.jonas.multitenant.beneficiario.dto.BeneficiarioResponse;
 import br.com.jonas.multitenant.beneficiario.dto.BeneficiarioUpdateRequest;
 import br.com.jonas.multitenant.beneficiario.service.BeneficiarioService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+import br.com.jonas.multitenant.beneficiario.entity.StatusBeneficiario;
+import br.com.jonas.multitenant.beneficiario.entity.TipoBeneficiario;
+import br.com.jonas.multitenant.common.dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +32,13 @@ public class BeneficiarioController {
     }
 
     @GetMapping
-    public Page<BeneficiarioResponse> findAll(
+    public PageResponse<BeneficiarioResponse> findAll(
             @RequestParam(required = false) String matricula,
+            @RequestParam(required = false) StatusBeneficiario status,
+            @RequestParam(required = false) TipoBeneficiario tipo,
             Pageable pageable
     ) {
-        return beneficiarioService.findAll(matricula, pageable);
+        return beneficiarioService.findAll(matricula, status, tipo, pageable);
     }
 
     @GetMapping("/{id}")
