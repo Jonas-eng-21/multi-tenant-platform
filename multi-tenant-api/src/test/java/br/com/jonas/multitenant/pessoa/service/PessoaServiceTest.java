@@ -50,6 +50,22 @@ class PessoaServiceTest {
     }
 
     @Test
+    void findAll_returnsPageResponse() {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        Pessoa p = new Pessoa(pessoaId, "João", "12345678901", LocalDate.of(1990, 1, 1), "joao@email.com");
+        
+        when(pessoaRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable)))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(java.util.List.of(p)));
+
+        br.com.jonas.multitenant.common.dto.PageResponse<PessoaResponse> result = pessoaService.findAll(null, null, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.content().size());
+        assertEquals("João", result.content().get(0).nome());
+        verify(pessoaRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable));
+    }
+
+    @Test
     void create_cpfAlreadyExists_throwsConflictException() {
         PessoaCreateRequest request = new PessoaCreateRequest("João", "12345678901", LocalDate.of(1990, 1, 1), "joao@email.com");
         Pessoa pessoaExistente = new Pessoa(pessoaId, "Maria", "12345678901", LocalDate.of(1990, 1, 1), null);

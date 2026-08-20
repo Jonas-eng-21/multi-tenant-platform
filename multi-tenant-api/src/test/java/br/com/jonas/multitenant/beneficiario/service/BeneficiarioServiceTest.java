@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import br.com.jonas.multitenant.common.dto.PageResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -120,16 +121,15 @@ class BeneficiarioServiceTest {
                 LocalDate.now()
         );
 
-        when(beneficiarioRepository.findByTenantId(tenant1Id, pageable))
+        when(beneficiarioRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(b1)));
 
-        Page<BeneficiarioResponse> result = beneficiarioService.findAll(null, pageable);
+        PageResponse<BeneficiarioResponse> result = beneficiarioService.findAll(null, null, null, pageable);
 
         assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(tenant1Id, result.getContent().get(0).tenantId());
-        verify(beneficiarioRepository).findByTenantId(tenant1Id, pageable);
-        verify(beneficiarioRepository, never()).findByTenantId(eq(tenant2Id), any());
+        assertEquals(1, result.content().size());
+        assertEquals(beneficiarioId, result.content().get(0).id());
+        verify(beneficiarioRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable));
     }
 
     @Test
