@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BeneficiarioRepository extends JpaRepository<Beneficiario, UUID>, JpaSpecificationExecutor<Beneficiario> {
+    boolean existsByPessoaId(UUID pessoaId);
 
     Optional<Beneficiario> findByIdAndTenantId(UUID id, UUID tenantId);
 

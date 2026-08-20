@@ -7,6 +7,7 @@ import br.com.jonas.multitenant.pessoa.dto.PessoaResponse;
 import br.com.jonas.multitenant.pessoa.dto.PessoaUpdateRequest;
 import br.com.jonas.multitenant.pessoa.entity.Pessoa;
 import br.com.jonas.multitenant.pessoa.repository.PessoaRepository;
+import br.com.jonas.multitenant.beneficiario.repository.BeneficiarioRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import br.com.jonas.multitenant.common.dto.PageResponse;
 import br.com.jonas.multitenant.pessoa.repository.PessoaSpecification;
@@ -21,9 +22,11 @@ import java.util.UUID;
 public class PessoaService {
 
     private final PessoaRepository pessoaRepository;
+    private final BeneficiarioRepository beneficiarioRepository;
 
-    public PessoaService(PessoaRepository pessoaRepository) {
+    public PessoaService(PessoaRepository pessoaRepository, BeneficiarioRepository beneficiarioRepository) {
         this.pessoaRepository = pessoaRepository;
+        this.beneficiarioRepository = beneficiarioRepository;
     }
 
     @Transactional
@@ -82,6 +85,10 @@ public class PessoaService {
     public void delete(UUID id) {
         Pessoa pessoa = pessoaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
+
+        if (beneficiarioRepository.existsByPessoaId(id)) {
+            throw new ConflictException("Não é possível excluir Pessoa com Beneficiários vinculados");
+        }
 
         try {
             pessoaRepository.delete(pessoa);
