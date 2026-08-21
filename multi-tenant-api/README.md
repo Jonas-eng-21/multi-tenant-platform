@@ -35,7 +35,6 @@ Essa é uma separação de camadas clássica do ecossistema Spring:
 
 ## 3. Multi-Tenancy
 
-> **[INSERIR IMAGEM — Fluxo Multi-Tenant]**
 
 A estratégia escolhida foi **Shared Database, Shared Schema, Discriminator Column (`tenant_id`)**. 
 
@@ -72,7 +71,6 @@ O banco de dados relacional (PostgreSQL) adota IDs em formato UUIDv4 (distribuí
 - **Beneficiários:** (id, pessoa_id, tenant_id, matricula, tipo, status). FKs garantem consistência estrutural.
 - **Constraints/Índices:** Existem Unique Constraints na matrícula combinada com tenant_id, e checagens fixas de domínio nos enumeradores (TITULAR, DEPENDENTE). A busca por tenant tem índices.
 
-> **[INSERIR IMAGEM — Estrutura do banco/migrations]**
 
 ## 6. Banco e Migrations (Flyway)
 
@@ -97,7 +95,6 @@ A API expõe o ecossistema sob diretrizes RESTful, tipicamente nos endpoints:
   - Isolado. Paginação, Busca por `matricula`, `status` ou `tipo`.
   - Códigos HTTP: 201 (Created), 200 (OK), 204 (No Content), 404 (Not Found) ou 409 (Conflict).
 
-> **[INSERIR IMAGEM — Swagger/OpenAPI]**
 
 ## 8. Tratamento de Erros
 
