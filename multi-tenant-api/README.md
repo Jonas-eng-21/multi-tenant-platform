@@ -2,7 +2,6 @@
 
 Esta é a documentação técnica oficial do backend da plataforma Multi-Tenant. O documento descreve não apenas a estrutura técnica do projeto, mas também as motivações arquiteturais, a estratégia de isolamento de dados e as decisões de engenharia adotadas na construção da API.
 
-> **[INSERIR IMAGEM — Arquitetura geral do Backend]**
 
 ## 1. Idealização do Backend
 
