@@ -201,39 +201,7 @@ A saúde do código é validada através do compilador do TypeScript (Type-Check
 
 ---
 
-## 13. Como Executar
-
-### Pré-requisitos
-- Node.js versão 24+ (para execução local sem Docker)
-- Docker e Docker Compose
-
-### Executando Localmente (Desenvolvimento)
-1. Certifique-se de que a API Backend está rodando (localmente ou em um container).
-2. Na raiz da pasta `frontend`, instale as dependências:
-   ```bash
-   npm install
-   ```
-3. Crie um arquivo `.env` (se necessário) apontando para a API:
-   ```env
-   VITE_API_URL=http://localhost:8080
-   ```
-4. Execute o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-### Executando via Docker
-O fluxo de produção/containerização pode ser iniciado diretamente através do arquivo `Dockerfile`:
-
-```bash
-docker build -t frontend-app --build-arg VITE_API_URL=http://localhost:8080 .
-docker run -p 80:80 frontend-app
-```
-Acesse `http://localhost` no navegador.
-
----
-
-## 14. Resultado Final
+## 13. Resultado Final
 
 O Front-End da Plataforma Multi-Tenant foi entregue consolidando um produto de software robusto e focado no usuário. A aplicação é capaz de:
 - Consumir endpoints de forma paginada e segura;
